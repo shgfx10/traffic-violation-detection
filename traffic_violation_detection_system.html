@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0a0d12;
+    --bg2: #111620;
+    --bg3: #161c27;
+    --border: rgba(0,220,150,0.18);
+    --accent: #00dc96;
+    --accent2: #00aaff;
+    --red: #ff3d3d;
+    --orange: #ff8a00;
+    --yellow: #ffd600;
+    --text: #e0f0ea;
+    --muted: #6b8a7e;
+    --panel: #0d1219;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--text); }
+
+  .status-pills { display: flex; gap: 8px; align-items: center; }
+
+  .pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .pill-live { background: rgba(0,220,150,0.12); color: var(--accent); border-color: var(--accent); animation: pulse-border 2s infinite; }
+  .pill-cam { background: rgba(0,170,255,0.1); color: var(--accent2); border-color: var(--accent2); }
+  .pill-ai { background: rgba(255,61,61,0.1); color: var(--red); border-color: var(--red); }
+
+  @keyframes pulse-border { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  .sys-time {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* ─── LAYOUT ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 0;
+    height: calc(100vh - 45px);
+  }
+
+  .left-panel { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .right-panel {
+    border-left: 1px solid var(--border);
+    background: var(--panel);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── STATS BAR ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .stat-card.green::before { background: var(--accent); }
+  .stat-card.blue::before { background: var(--accent2); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.orange::before { background: var(--orange); }
+
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.orange { color: var(--orange); }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* ─── CAMERA GRID ─── */
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .cameras-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .cam-feed {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s, transform .15s;
+    position: relative;
+  }
+
+  .cam-feed:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .cam-feed.alert { border-color: var(--red); animation: alert-flash 0.8s infinite; }
+
+  @keyframes alert-flash { 0%,100%{border-color:var(--red)} 50%{border-color:rgba(255,61,61,0.3)} }
+
+  .cam-canvas-wrap { position: relative; width: 100%; aspect-ratio: 16/9; }
+  .cam-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+
+  .cam-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+
+  .cam-label {
+    position: absolute;
+    top: 6px; left: 6px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(0,220,150,0.3);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .cam-rec {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: blink 1.2s infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .cam-status {
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .cam-id { font-size: 11px; color: var(--muted); }
+  .cam-viol { font-size: 11px; font-weight: 500; }
+
+  /* ─── CHARTS ─── */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .chart-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .chart-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+  /* ─── RIGHT PANEL ─── */
+  .rp-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-head);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rp-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: blink 1s infinite;
+  }
+
+  .violations-list { flex: 1; overflow-y: auto; }
+
+  .viol-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background .15s;
+    animation: slide-in .3s ease-out;
+  }
+
+  @keyframes slide-in { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:none; } }
+
+  .viol-item:hover { background: rgba(0,220,150,0.04); }
+
+  .viol-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .viol-plate {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .viol-badge {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+
+  .badge-speed { background: rgba(255,61,61,0.2); color: var(--red); border: 1px solid rgba(255,61,61,0.4); }
+  .badge-signal { background: rgba(255,138,0,0.2); color: var(--orange); border: 1px solid rgba(255,138,0,0.4); }
+  .badge-lane { background: rgba(255,214,0,0.2); color: var(--yellow); border: 1px solid rgba(255,214,0,0.4); }
+  .badge-wrong { background: rgba(220,0,255,0.2); color: #dd66ff; border: 1px solid rgba(220,0,255,0.4); }
+  .badge-parking { background: rgba(0,170,255,0.2); color: var(--accent2); border: 1px solid rgba(0,170,255,0.4); }
+
+  .viol-meta { font-size: 10px; color: var(--muted); }
+  .viol-speed { font-size: 10px; color: var(--red); margin-top: 2px; }
+
+  /* ─── DETAIL PANEL ─── */
+  .detail-panel {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+
+  .detail-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 11px;
+  }
+
+  .detail-row:last-child { border: none; }
+  .detail-key { color: var(--muted); }
+  .detail-val { color: var(--text); font-weight: 500; }
+
+  .action-btns { display: flex; gap: 8px; margin-top: 12px; }
+
+  .btn {
+    flex: 1;
+    padding: 7px 0;
+    border-radius: 5px;
+    border: 1px solid;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: all .15s;
+    text-align: center;
+    background: transparent;
+  }
+
+  .btn-confirm { color: var(--accent); border-color: var(--accent); }
+  .btn-confirm:hover { background: rgba(0,220,150,0.15); }
+  .btn-dismiss { color: var(--muted); border-color: rgba(255,255,255,0.15); }
+  .btn-dismiss:hover { background: rgba(255,255,255,0.05); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,220,150,0.2); border-radius: 4px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 520px;
+    max-width: 95vw;
+    padding: 24px;
+    animation: modal-in .25s ease-out;
+  }
+
+  @keyframes modal-in { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:none} }
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .modal-field { background: var(--bg3); border-radius: 6px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.06); }
+  .modal-fl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .modal-fv { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  canvas { display: block; }
+
+  .badge-severity {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .sev-high { background: rgba(255,61,61,0.2); color: var(--red); border: 1px solid var(--red); }
+  .sev-med { background: rgba(255,138,0,0.2); color: var(--orange); border: 1px solid var(--orange); }
+  .sev-low { background: rgba(255,214,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+
+  /* ─── BOTTOM ACTIONS ─── */
+  .modal-actions { display: flex; gap: 10px; }
+
+  .btn-full { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; font-family: var(--font-mono); transition: all .15s; background: transparent; }
+  .btn-issue { color: var(--red); border-color: var(--red); }
+  .btn-issue:hover { background: rgba(255,61,61,0.15); }
+  .btn-review { color: var(--accent2); border-color: var(--accent2); }
+  .btn-review:hover { background: rgba(0,170,255,0.1); }
+  .btn-close2 { color: var(--muted); border-color: rgba(255,255,255,0.15); }
+  .btn-close2:hover { background: rgba(255,255,255,0.06); }
+
+  /* ─── SCROLL OFFSET ─── */
+  .violations-list { scrollbar-width: thin; scrollbar-color: rgba(0,220,150,0.2) transparent; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">TVDS <span>// Traffic Violation Detection</span></div>
+  <div class="status-pills">
+    <div class="pill pill-live">● Live</div>
+    <div class="pill pill-cam">6 Cameras</div>
+    <div class="pill pill-ai">AI Active</div>
+  </div>
+  <div class="sys-time" id="sys-time">--:--:-- IST</div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card green">
+        <div class="stat-label">Vehicles Tracked</div>
+        <div class="stat-value green" id="stat-tracked">0</div>
+        <div class="stat-sub">Today total</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Violations Today</div>
+        <div class="stat-value red" id="stat-viols">0</div>
+        <div class="stat-sub" id="stat-rate">Rate: 0/hr</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Avg Speed</div>
+        <div class="stat-value orange" id="stat-speed">0</div>
+        <div class="stat-sub">km/h</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">AI Confidence</div>
+        <div class="stat-value blue">97.4<span style="font-size:16px">%</span></div>
+        <div class="stat-sub">Model accuracy</div>
+      </div>
+    </div>
+
+    <!-- CAMERAS -->
+    <div>
+      <div class="section-head">
+        <div class="section-title">// Live Camera Feeds</div>
+        <div style="font-size:10px;color:var(--muted)" id="cam-status-lbl">All feeds nominal</div>
+      </div>
+      <div class="cameras-grid" id="cameras-grid"></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <div class="chart-title">Violations by Type (Today)</div>
+        <canvas id="chart-donut" width="240" height="160"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Hourly Violation Trend</div>
+        <canvas id="chart-bar" width="240" height="160"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rp-header">
+      <div class="rp-dot"></div>
+      Live Violations
+    </div>
+    <div class="violations-list" id="violations-list"></div>
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-title">Last Violation Detail</div>
+      <div id="detail-content">
+        <div style="color:var(--muted);font-size:11px;padding:10px 0">No violation selected. Click any entry to inspect.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">VIOLATION #0001</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div id="modal-badge"></div>
+    <div class="modal-grid" id="modal-grid"></div>
+    <canvas id="modal-canvas" width="472" height="160" style="width:100%;border-radius:6px;margin-bottom:16px;border:1px solid var(--border)"></canvas>
+    <div class="modal-actions">
+      <button class="btn-full btn-issue" onclick="issueChalan()">Issue Challan</button>
+      <button class="btn-full btn-review" onclick="closeModalDirect()">Send for Review</button>
+      <button class="btn-full btn-close2" onclick="closeModalDirect()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+const state = {
+  violations: [],
+  vehicles: 0,
+  startTime: Date.now(),
+  selectedViol: null,
+  challanCount: 0,
+};
+
+const cameraConfig = [
+  { id: 'CAM-01', loc: 'NH-44 North Entry', speed_limit: 60 },
+  { id: 'CAM-02', loc: 'Anna Salai Jctn', speed_limit: 50 },
+  { id: 'CAM-03', loc: 'GST Road Bridge', speed_limit: 80 },
+  { id: 'CAM-04', loc: 'Mount Road Sig', speed_limit: 50 },
+  { id: 'CAM-05', loc: 'Kathipara Flyover', speed_limit: 60 },
+  { id: 'CAM-06', loc: 'OMR Toll Plaza', speed_limit: 80 },
+];
+
+const VIOLATION_TYPES = ['Overspeeding', 'Signal Jump', 'Lane Violation', 'Wrong Side', 'No Helmet', 'Illegal Parking'];
+const VIOLATION_BADGE = ['badge-speed', 'badge-signal', 'badge-lane', 'badge-wrong', 'badge-speed', 'badge-parking'];
+
+const PLATES = ['TN01 AB 1234','TN07 CD 5678','TN22 EF 9012','KA05 GH 3456','AP09 IJ 7890','MH12 KL 2345','TN10 MN 6789','DL04 OP 0123','TN14 QR 4567','GJ01 ST 8901'];
+const VEHICLE_TYPES = ['Car','SUV','Motorcycle','Auto','Truck','Bus','Van'];
+const COLORS = ['White','Black','Silver','Red','Blue','Grey','Yellow'];
+
+function randInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function randOf(arr) { return arr[randInt(0,arr.length-1)]; }
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function now() {
+  const d = new Date();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+// ─── CLOCK ───
+function updateClock() {
+  const d = new Date();
+  document.getElementById('sys-time').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} IST`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── CAMERAS ───
+const camCtxs = [];
+
+function buildCameras() {
+  const grid = document.getElementById('cameras-grid');
+  cameraConfig.forEach((cam, i) => {
+    const div = document.createElement('div');
+    div.className = 'cam-feed';
+    div.id = 'cam-' + i;
+    div.onclick = () => expandCam(i);
+    div.innerHTML = `
+      <div class="cam-canvas-wrap">
+        <canvas id="cc-${i}" width="320" height="180"></canvas>
+        <div class="cam-overlay">
+          <div class="cam-label">${cam.id}</div>
+          <div class="cam-rec"></div>
+        </div>
+      </div>
+      <div class="cam-status">
+        <span class="cam-id">${cam.loc}</span>
+        <span class="cam-viol" id="cam-viol-${i}" style="color:var(--muted)">0 events</span>
+      </div>
+    `;
+    grid.appendChild(div);
+    camCtxs[i] = document.getElementById('cc-' + i).getContext('2d');
+  });
+}
+
+const camVehicles = cameraConfig.map(() => []);
+const camViolCounts = new Array(6).fill(0);
+let camFrames = new Array(6).fill(0);
+
+function drawCamFeed(i) {
+  const ctx = camCtxs[i];
+  if (!ctx) return;
+  const W = 320, H = 180;
+  camFrames[i]++;
+  const t = camFrames[i];
+
+  // Road scene background
+  ctx.fillStyle = '#0c1018';
+  ctx.fillRect(0,0,W,H);
+
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0,0,0,80);
+  sky.addColorStop(0, '#0a0f1e');
+  sky.addColorStop(1, '#101825');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,W,80);
+
+  // Road
+  ctx.fillStyle = '#1a1f2c';
+  ctx.beginPath();
+  ctx.moveTo(0,H); ctx.lineTo(W,H);
+  ctx.lineTo(W*0.7,60); ctx.lineTo(W*0.3,60);
+  ctx.fill();
+
+  // Road lines (dashes)
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([10,12]);
+  ctx.beginPath();
+  ctx.moveTo(W/2,H); ctx.lineTo(W/2,60);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Sidewalk
+  ctx.fillStyle = '#1d2232';
+  ctx.fillRect(0,70,W*0.28,H-70);
+  ctx.fillRect(W*0.72,70,W*0.28,H-70);
+
+  // Grid lines (overlay tech feel)
+  ctx.strokeStyle = 'rgba(0,220,150,0.04)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Draw vehicles
+  camVehicles[i].forEach(v => {
+    v.x += v.dx;
+    v.y += v.dy;
+    if(v.y>H+30 || v.y<-30 || v.x>W+40 || v.x<-40) {
+      v.reset();
+      state.vehicles++;
+    }
+
+    const scale = 0.5 + (v.y / H) * 0.6;
+    const vw = v.width * scale;
+    const vh = v.height * scale;
+
+    // Detection box
+    if(v.detected) {
+      ctx.strokeStyle = v.alert ? 'rgba(255,61,61,0.9)' : 'rgba(0,220,150,0.7)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(v.x - vw/2 - 3, v.y - vh - 3, vw + 6, vh + 6);
+
+      // Corners
+      const cx = v.x - vw/2 - 3, cy = v.y - vh - 3, cw = vw+6, ch = vh+6;
+      const cs = 6;
+      ctx.strokeStyle = v.alert ? '#ff3d3d' : '#00dc96';
+      ctx.lineWidth = 1.5;
+      [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([px,py],j) => {
+        ctx.beginPath();
+        if(j===0){ctx.moveTo(px,py+cs);ctx.lineTo(px,py);ctx.lineTo(px+cs,py);}
+        else if(j===1){ctx.moveTo(px-cs,py);ctx.lineTo(px,py);ctx.lineTo(px,py+cs);}
+        else if(j===2){ctx.moveTo(px,py-cs);ctx.lineTo(px,py);ctx.lineTo(px+cs,py);}
+        else{ctx.moveTo(px-cs,py);ctx.lineTo(px,py);ctx.lineTo(px,py-cs);}
+        ctx.stroke();
+      });
+
+      // Speed label
+      if(v.speed) {
+        ctx.fillStyle = v.alert ? '#ff3d3d' : '#00dc96';
+        ctx.font = `700 ${Math.max(7,8*scale)}px 'JetBrains Mono',monospace`;
+        ctx.fillText(`${v.speed}km/h`, v.x - vw/2 - 2, v.y - vh - 7);
+      }
+
+      // Plate
+      if(v.plate) {
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        const pw = vw;
+        ctx.fillRect(v.x - vw/2, v.y - 6*scale, pw, 8*scale);
+        ctx.fillStyle = '#fff';
+        ctx.font = `${Math.max(5,7*scale)}px 'JetBrains Mono',monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(v.plate.slice(0,8), v.x, v.y - 1*scale);
+        ctx.textAlign = 'left';
+      }
+    }
+
+    // Vehicle body
+    ctx.fillStyle = v.color;
+    ctx.fillRect(v.x - vw/2, v.y - vh, vw, vh*0.7);
+
+    // Windshield
+    ctx.fillStyle = 'rgba(100,180,255,0.25)';
+    const ws = 0.22;
+    ctx.fillRect(v.x - vw/2 + vw*ws, v.y - vh + 2, vw*(1-ws*2), vh*0.28);
+
+    // Wheels
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.ellipse(v.x - vw*0.3, v.y - vh*0.05, vw*0.12, vw*0.08, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(v.x + vw*0.3, v.y - vh*0.05, vw*0.12, vw*0.08, 0, 0, Math.PI*2); ctx.fill();
+
+    // Headlights / taillights
+    if(v.dir < 0) {
+      ctx.fillStyle = 'rgba(255,80,80,0.8)';
+      ctx.fillRect(v.x - vw/2 + 1, v.y - vh*0.6, 3*scale, 3*scale);
+      ctx.fillRect(v.x + vw/2 - 4*scale, v.y - vh*0.6, 3*scale, 3*scale);
+    } else {
+      ctx.fillStyle = 'rgba(255,255,200,0.85)';
+      ctx.fillRect(v.x - vw/2 + 1, v.y - vh*0.6, 3*scale, 3*scale);
+      ctx.fillRect(v.x + vw/2 - 4*scale, v.y - vh*0.6, 3*scale, 3*scale);
+    }
+  });
+
+  // Scanline overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.03)';
+  for(let s=0;s<H;s+=2) { ctx.fillRect(0,s,W,1); }
+
+  // Vignette
+  const vg = ctx.createRadialGradient(W/2,H/2,W*0.2,W/2,H/2,W*0.75);
+  vg.addColorStop(0,'transparent'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,W,H);
+
+  // Timestamp
+  ctx.fillStyle = 'rgba(0,220,150,0.6)';
+  ctx.font = '8px JetBrains Mono,monospace';
+  ctx.fillText(new Date().toTimeString().slice(0,8), W-62, H-6);
+}
+
+function createVehicle(i) {
+  const isIncoming = Math.random() > 0.5;
+  const laneOffset = (Math.random()-0.5)*30;
+  const spd = randInt(30,120);
+  const isAlert = spd > cameraConfig[i].speed_limit || Math.random() < 0.08;
+  const obj = {
+    x: 160 + laneOffset,
+    y: isIncoming ? -20 : 200,
+    dx: (Math.random()-0.5)*0.4,
+    dy: isIncoming ? randInt(1,3) : -randInt(1,3),
+    dir: isIncoming ? 1 : -1,
+    width: randInt(22,36),
+    height: randInt(14,22),
+    color: ['#3a4a5e','#4a3a3a','#2a3a4a','#3a3a2a','#3a3a3a','#4a4a5a','#5a4a3a'][randInt(0,6)],
+    speed: spd,
+    plate: randOf(PLATES),
+    detected: Math.random() > 0.1,
+    alert: isAlert,
+    reset() {
+      this.x = 160 + (Math.random()-0.5)*30;
+      this.y = this.dy > 0 ? -20 : 200;
+      this.speed = randInt(30,120);
+      this.alert = this.speed > cameraConfig[i].speed_limit || Math.random()<0.08;
+      this.plate = randOf(PLATES);
+    }
+  };
+  return obj;
+}
+
+function initCamVehicles() {
+  cameraConfig.forEach((_, i) => {
+    for(let v=0;v<randInt(1,3);v++) {
+      camVehicles[i].push(createVehicle(i));
+    }
+  });
+}
+
+// ─── VIOLATION GENERATOR ───
+function addViolation() {
+  const camIdx = randInt(0,5);
+  const cam = cameraConfig[camIdx];
+  const typeIdx = randInt(0,5);
+  const speed = typeIdx === 0 ? randInt(cam.speed_limit+5, cam.speed_limit+55) : randInt(30, cam.speed_limit);
+  const conf = (92 + Math.random()*7).toFixed(1);
+
+  const sev = typeIdx === 0 && speed > cam.speed_limit + 30 ? 'HIGH' :
+              typeIdx === 0 ? 'MEDIUM' : typeIdx === 1 ? 'HIGH' : 'LOW';
+
+  const v = {
+    id: String(state.violations.length + 1).padStart(4, '0'),
+    plate: randOf(PLATES),
+    type: VIOLATION_TYPES[typeIdx],
+    typeIdx,
+    camera: cam.id,
+    location: cam.loc,
+    speed,
+    limit: cam.speed_limit,
+    vehicle: randOf(VEHICLE_TYPES),
+    color: randOf(COLORS),
+    confidence: conf,
+    time: now(),
+    severity: sev,
+    camIdx,
+  };
+
+  state.violations.unshift(v);
+  if(state.violations.length > 50) state.violations.pop();
+
+  camViolCounts[camIdx]++;
+  document.getElementById('cam-viol-' + camIdx).textContent = camViolCounts[camIdx] + ' events';
+  document.getElementById('cam-viol-' + camIdx).style.color = 'var(--red)';
+
+  // Flash cam
+  const camEl = document.getElementById('cam-' + camIdx);
+  if(camEl) {
+    camEl.classList.add('alert');
+    setTimeout(() => camEl.classList.remove('alert'), 3000);
+  }
+
+  // Alert vehicle in canvas
+  if(camVehicles[camIdx][0]) {
+    camVehicles[camIdx][0].alert = true;
+    camVehicles[camIdx][0].speed = speed;
+  }
+
+  renderViolations();
+  updateStats();
+}
+
+function renderViolations() {
+  const list = document.getElementById('violations-list');
+  list.innerHTML = '';
+  state.violations.slice(0,30).forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'viol-item';
+    el.onclick = () => showDetail(v);
+    el.innerHTML = `
+      <div class="viol-top">
+        <span class="viol-plate">${v.plate}</span>
+        <span class="viol-badge ${VIOLATION_BADGE[v.typeIdx]}">${v.type}</span>
+      </div>
+      <div class="viol-meta">${v.camera} · ${v.location} · ${v.time}</div>
+      ${v.typeIdx === 0 ? `<div class="viol-speed">${v.speed} km/h in ${v.limit} km/h zone</div>` : ''}
+    `;
+    list.appendChild(el);
+  });
+}
+
+function showDetail(v) {
+  state.selectedViol = v;
+  const sev = v.severity === 'HIGH' ? 'sev-high' : v.severity === 'MEDIUM' ? 'sev-med' : 'sev-low';
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-row"><span class="detail-key">Plate</span><span class="detail-val" style="font-family:var(--font-head);font-size:13px;letter-spacing:2px">${v.plate}</span></div>
+    <div class="detail-row"><span class="detail-key">Violation</span><span class="detail-val">${v.type}</span></div>
+    <div class="detail-row"><span class="detail-key">Camera</span><span class="detail-val">${v.camera}</span></div>
+    <div class="detail-row"><span class="detail-key">Speed</span><span class="detail-val" style="color:${v.speed > v.limit ? 'var(--red)':'var(--accent)'}">${v.speed} km/h</span></div>
+    <div class="detail-row"><span class="detail-key">Severity</span><span class="detail-val" style="color:${v.severity==='HIGH'?'var(--red)':v.severity==='MEDIUM'?'var(--orange)':'var(--yellow)'}">${v.severity}</span></div>
+    <div class="detail-row"><span class="detail-key">AI Conf.</span><span class="detail-val">${v.confidence}%</span></div>
+    <div class="action-btns">
+      <button class="btn btn-confirm" onclick="openModal()">Issue Challan</button>
+      <button class="btn btn-dismiss">Dismiss</button>
+    </div>
+  `;
+}
+
+function openModal() {
+  const v = state.selectedViol;
+  if(!v) return;
+  document.getElementById('modal-title').textContent = `VIOLATION #${v.id}`;
+
+  const sev = v.severity === 'HIGH' ? 'sev-high' : v.severity === 'MEDIUM' ? 'sev-med' : 'sev-low';
+  document.getElementById('modal-badge').innerHTML = `<div class="badge-severity ${sev}">${v.severity} SEVERITY — ${v.type}</div>`;
+
+  document.getElementById('modal-grid').innerHTML = `
+    <div class="modal-field"><div class="modal-fl">License Plate</div><div class="modal-fv" style="font-family:var(--font-head);letter-spacing:3px;font-size:15px">${v.plate}</div></div>
+    <div class="modal-field"><div class="modal-fl">Vehicle Type</div><div class="modal-fv">${v.vehicle} · ${v.color}</div></div>
+    <div class="modal-field"><div class="modal-fl">Camera</div><div class="modal-fv">${v.camera}</div></div>
+    <div class="modal-field"><div class="modal-fl">Location</div><div class="modal-fv">${v.location}</div></div>
+    <div class="modal-field"><div class="modal-fl">Recorded Speed</div><div class="modal-fv" style="color:${v.speed>v.limit?'var(--red)':'var(--accent)'}">${v.speed} km/h <span style="color:var(--muted);font-size:11px">(Limit: ${v.limit})</span></div></div>
+    <div class="modal-field"><div class="modal-fl">Time</div><div class="modal-fv">${v.time}</div></div>
+    <div class="modal-field"><div class="modal-fl">AI Confidence</div><div class="modal-fv">${v.confidence}%</div></div>
+    <div class="modal-field"><div class="modal-fl">Fine Amount</div><div class="modal-fv" style="color:var(--red)">₹${v.severity==='HIGH'?2000:v.severity==='MEDIUM'?1000:500}</div></div>
+  `;
+
+  drawModalCanvas(v);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function drawModalCanvas(v) {
+  const canvas = document.getElementById('modal-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 472, H = 160;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle = '#0c1018';
+  ctx.fillRect(0,0,W,H);
+
+  // Road
+  ctx.fillStyle = '#16202c';
+  ctx.beginPath();
+  ctx.moveTo(0,H); ctx.lineTo(W,H); ctx.lineTo(W*0.65,50); ctx.lineTo(W*0.35,50); ctx.fill();
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,220,150,0.05)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Vehicle
+  const vx = W/2, vy = H*0.72;
+  const vw = 70, vh = 40;
+  ctx.fillStyle = '#3a4a5e';
+  ctx.fillRect(vx-vw/2, vy-vh, vw, vh*0.7);
+  ctx.fillStyle = 'rgba(100,180,255,0.25)';
+  ctx.fillRect(vx-vw/2+14, vy-vh+3, vw-28, vh*0.28);
+
+  // Bounding box
+  ctx.strokeStyle = '#ff3d3d';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(vx-vw/2-4, vy-vh-4, vw+8, vh+8);
+
+  // Corners
+  const corners = [[vx-vw/2-4,vy-vh-4],[vx+vw/2+4,vy-vh-4],[vx-vw/2-4,vy+4],[vx+vw/2+4,vy+4]];
+  corners.forEach(([cx,cy],j) => {
+    ctx.beginPath();
+    if(j===0){ctx.moveTo(cx,cy+8);ctx.lineTo(cx,cy);ctx.lineTo(cx+8,cy);}
+    else if(j===1){ctx.moveTo(cx-8,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy+8);}
+    else if(j===2){ctx.moveTo(cx,cy-8);ctx.lineTo(cx,cy);ctx.lineTo(cx+8,cy);}
+    else{ctx.moveTo(cx-8,cy);ctx.lineTo(cx,cy);ctx.lineTo(cx,cy-8);}
+    ctx.stroke();
+  });
+
+  // Speed display
+  ctx.fillStyle = '#ff3d3d';
+  ctx.font = 'bold 12px JetBrains Mono,monospace';
+  ctx.fillText(`${v.speed} km/h`, vx-vw/2, vy-vh-10);
+
+  // Plate overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(vx-vw/2, vy-8, vw, 14);
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px JetBrains Mono,monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(v.plate, vx, vy+2);
+  ctx.textAlign = 'left';
+
+  // Direction arrow
+  ctx.strokeStyle = 'rgba(0,220,150,0.5)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(vx, vy-vh); ctx.lineTo(vx, vy-vh-30); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Scanlines
+  ctx.fillStyle='rgba(0,0,0,0.04)';
+  for(let s=0;s<H;s+=2) ctx.fillRect(0,s,W,1);
+
+  // Timestamp
+  ctx.fillStyle='rgba(0,220,150,0.5)';
+  ctx.font='9px JetBrains Mono,monospace';
+  ctx.fillText(v.time, 8, H-6);
+  ctx.fillText(v.camera, W-80, H-6);
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function issueChalan() {
+  state.challanCount++;
+  alert(`✅ Challan issued!\nPlate: ${state.selectedViol?.plate}\nFine: ₹${state.selectedViol?.severity==='HIGH'?2000:state.selectedViol?.severity==='MEDIUM'?1000:500}\nRef: TVDS-${Date.now()}`);
+  closeModalDirect();
+}
+
+// ─── STATS ───
+function updateStats() {
+  const total = state.violations.length;
+  const hrs = Math.max(1, (Date.now() - state.startTime) / 3600000);
+  document.getElementById('stat-tracked').textContent = state.vehicles;
+  document.getElementById('stat-viols').textContent = total;
+  document.getElementById('stat-rate').textContent = `Rate: ${(total/hrs).toFixed(1)}/hr`;
+
+  const speeds = state.violations.filter(v=>v.speed).map(v=>v.speed);
+  const avg = speeds.length ? Math.round(speeds.reduce((a,b)=>a+b,0)/speeds.length) : 0;
+  document.getElementById('stat-speed').textContent = avg;
+}
+
+// ─── CHARTS ───
+function drawDonut() {
+  const canvas = document.getElementById('chart-donut');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const counts = new Array(6).fill(0);
+  state.violations.forEach(v => counts[v.typeIdx]++);
+
+  const total = counts.reduce((a,b)=>a+b,0) || 1;
+  const colors = ['#ff3d3d','#ff8a00','#ffd600','#dd66ff','#ff3d3d','#00aaff'];
+  const cx = 70, cy = H/2, r = 55, ri = 28;
+
+  let startAngle = -Math.PI/2;
+  counts.forEach((c,i) => {
+    if(!c) return;
+    const angle = (c/total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+angle);
+    ctx.closePath();
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+    startAngle += angle;
+  });
+
+  // Hole
+  ctx.beginPath();
+  ctx.arc(cx,cy,ri,0,Math.PI*2);
+  ctx.fillStyle = '#161c27';
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = '#e0f0ea';
+  ctx.font = 'bold 14px Rajdhani,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(total, cx, cy+4);
+  ctx.font = '9px JetBrains Mono,monospace';
+  ctx.fillStyle = '#6b8a7e';
+  ctx.fillText('total', cx, cy+14);
+  ctx.textAlign = 'left';
+
+  // Legend
+  const labels = ['Overspeed','Signal','Lane','Wrong','Helmet','Parking'];
+  counts.forEach((c,i) => {
+    if(!c) return;
+    const lx = 145, ly = 20 + i*24;
+    ctx.fillStyle = colors[i];
+    ctx.fillRect(lx, ly-8, 10, 10);
+    ctx.fillStyle = '#6b8a7e';
+    ctx.font = '10px JetBrains Mono,monospace';
+    ctx.fillText(`${labels[i]}`, lx+14, ly);
+    ctx.fillStyle = '#e0f0ea';
+    ctx.font = 'bold 10px JetBrains Mono,monospace';
+    ctx.fillText(`${c}`, lx+100, ly);
+  });
+}
+
+function drawBar() {
+  const canvas = document.getElementById('chart-bar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Generate hourly data
+  const hours = [];
+  const now = new Date().getHours();
+  for(let h=Math.max(0,now-7);h<=now;h++) hours.push({ h, count: randInt(2,25) });
+
+  const max = Math.max(...hours.map(h=>h.count), 1);
+  const barW = Math.min(24, (W-40) / hours.length - 4);
+  const chartH = H-40;
+  const chartY = 10;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 0.5;
+  for(let y=0;y<=4;y++) {
+    const yp = chartY + chartH - (y/4)*chartH;
+    ctx.beginPath(); ctx.moveTo(30,yp); ctx.lineTo(W-10,yp); ctx.stroke();
+    ctx.fillStyle = '#6b8a7e';
+    ctx.font = '8px JetBrains Mono,monospace';
+    ctx.fillText(Math.round(max*y/4), 0, yp+3);
+  }
+
+  hours.forEach((hd,i) => {
+    const x = 30 + i * ((W-40)/hours.length);
+    const barH = (hd.count/max) * chartH;
+    const y = chartY + chartH - barH;
+
+    const grad = ctx.createLinearGradient(0,y,0,y+barH);
+    grad.addColorStop(0, hd.h===now ? '#ff3d3d' : '#00aaff');
+    grad.addColorStop(1, hd.h===now ? 'rgba(255,61,61,0.2)' : 'rgba(0,170,255,0.2)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, barW, barH);
+
+    ctx.fillStyle = '#6b8a7e';
+    ctx.font = '8px JetBrains Mono,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${hd.h}h`, x + barW/2, H-2);
+    ctx.textAlign = 'left';
+  });
+}
+
+// ─── ANIMATION LOOP ───
+function animLoop() {
+  cameraConfig.forEach((_, i) => drawCamFeed(i));
+  requestAnimationFrame(animLoop);
+}
+
+// ─── INIT ───
+buildCameras();
+initCamVehicles();
+
+// Spawn vehicles periodically
+setInterval(() => {
+  cameraConfig.forEach((_, i) => {
+    if(Math.random() < 0.3 && camVehicles[i].length < 4) {
+      camVehicles[i].push(createVehicle(i));
+    }
+    // Count
+    state.vehicles += Math.random() < 0.2 ? 1 : 0;
+  });
+}, 1200);
+
+// Add violations randomly
+function scheduleViolation() {
+  const delay = randInt(3000, 9000);
+  setTimeout(() => {
+    addViolation();
+    drawDonut();
+    drawBar();
+    scheduleViolation();
+  }, delay);
+}
+
+scheduleViolation();
+animLoop();
+drawDonut();
+drawBar();
+updateStats();
+setInterval(updateStats, 2000);
+setInterval(() => { drawDonut(); drawBar(); }, 5000);
+</script>
+</body>
+</html>
